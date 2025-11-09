@@ -1,5 +1,5 @@
 """
-URL configuration for mysite project.
+URL configuration for analitic project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -15,16 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework import routers
-from devices import views
-
-# router = routers.DefaultRouter()
-# router.register(r"data/<int:id>/", views.DataViewSet)
+from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('account.urls')),
-    path('devices/', include('devices.urls')),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]

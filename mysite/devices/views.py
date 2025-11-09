@@ -4,6 +4,26 @@ from django.contrib.auth.decorators import login_required
 from .models import Data, Device
 from django.core.paginator import Paginator
 from .forms import DeviceForm
+# from rest_framework import permissions, viewsets 
+from rest_framework.response import Response 
+from rest_framework.decorators import api_view
+from .serializers import DataSerializer
+
+
+# class DataViewSet(viewsets.ModelViewSet):
+    # queryset = Data.objects.values("device_id","date", "temp").filter(device_id=2)
+    # serializer_class = DataSerializer
+    # permission_classes = [permissions.IsAuthenticated]
+        
+@api_view(["GET", "POST"])
+def get_data(request, id):
+    queryset = Data.objects.all()
+    if id:
+        queryset = queryset.filter(device_id=id)
+    serializer = DataSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
 
 @login_required
 def data_all(request): 
