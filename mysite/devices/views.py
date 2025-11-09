@@ -1,12 +1,13 @@
+from django.http import request
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
 from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
 from .models import Data, Device
 from django.core.paginator import Paginator
 from .forms import DeviceForm
-# from rest_framework import permissions, viewsets 
+from rest_framework import generics, mixins
 from rest_framework.response import Response 
-from rest_framework.decorators import api_view
 from .serializers import DataSerializer
 
 
@@ -15,13 +16,12 @@ from .serializers import DataSerializer
     # serializer_class = DataSerializer
     # permission_classes = [permissions.IsAuthenticated]
         
-@api_view(["GET", "POST"])
-def get_data(request, id):
-    queryset = Data.objects.all()
-    if id:
-        queryset = queryset.filter(device_id=id)
-    serializer = DataSerializer(queryset, many=True)
-    return Response(serializer.data)
+class DataList(APIView):
+
+    def get(self, request, id, format=None):
+        queryset = Data.objects.all().filter(device_id=id)
+        serializer = DataSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 
