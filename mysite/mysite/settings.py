@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'account',
     'devices',
     'django_bootstrap5',
-    'api',
     'rest_framework',
 
 ]
