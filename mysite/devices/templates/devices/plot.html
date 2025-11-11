@@ -1,0 +1,7 @@
+{% extends 'devices/base.html' %}
+
+{% block content %}
+{% load django_bootstrap5 %}
+  <h1>График температуры</h1>
+  {{ plot_div|safe }}
+{% endblock %}

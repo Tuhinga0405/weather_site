@@ -1,3 +1,6 @@
+import requests as rq
+import plotly.io as pio
+import plotly.express as px
 from django.http import request
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
@@ -75,3 +78,14 @@ def add_device(request):
     else:
         form = DeviceForm()
     return render(request, 'devices/add_device.html', {'form': form})
+
+def image(request):
+    r = rq.get("http://localhost:8000/get_avg_temp/1")
+    data = r.json() 
+    months = data.keys()
+    temps = data.values()
+
+    fig = px.line(x=months, y=temps, title="Средняя температура по месяцам")
+    plot_div = pio.to_html(fig, full_html=False)
+    
+    return render(request, "devices/plot.html", {"plot_div":plot_div})
