@@ -15,9 +15,10 @@ def registration(request):
     return render(request, 'account/create_user.html', {'form': form})
 
 
-@login_required
 def home_page(request):
-    return render(request, 'account/home_page.html')
+    if request.user.is_authenticated:
+        return render(request, 'account/home_page.html')
+    return render(request, 'account/main_page.html')
 
 def sign_in(request):
     if request.method == "POST":
@@ -30,10 +31,10 @@ def sign_in(request):
         form = AuthenticationForm()
     return render(request, 'account/sign_in.html', {'form': form})
 
+@login_required
 def logout_view(request):
     logout(request)
-    return redirect('main_page')
+    return redirect('home_page')
 
-def main_page(request):
-    return render(request, 'account/main_page.html')
+
 

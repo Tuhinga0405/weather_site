@@ -1,4 +1,4 @@
-{% extends 'account/base.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
 {% load django_bootstrap5 %}
@@ -8,7 +8,7 @@
       <form method="POST" class="p-4 border rounded bg-light">
         {% csrf_token %}
         {% bootstrap_form form %}
-        <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+        <button type="submit" class="btn btn-primary w-100">Войти</button>
       </form>
     </div>
   </div>

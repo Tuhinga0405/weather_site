@@ -12,12 +12,8 @@ from .forms import DeviceForm
 from rest_framework import generics, mixins
 from rest_framework.response import Response 
 from .serializers import DataSerializer
+from .utils import turning_nums_to_months
 
-
-# class DataViewSet(viewsets.ModelViewSet):
-    # queryset = Data.objects.values("device_id","date", "temp").filter(device_id=2)
-    # serializer_class = DataSerializer
-    # permission_classes = [permissions.IsAuthenticated]
         
 class DataList(APIView):
 
@@ -79,13 +75,22 @@ def add_device(request):
         form = DeviceForm()
     return render(request, 'devices/add_device.html', {'form': form})
 
-def image(request):
-    r = rq.get("http://localhost:8000/get_avg_temp/1")
+
+def get_plot_avg_temp(request, id):
+    r = rq.get(f"http://localhost:8000/get_avg_temp/{id}")
     data = r.json() 
-    months = data.keys()
+
+    months = turning_nums_to_months(list(data.keys())) # api from analitics returns months as nums
     temps = data.values()
 
+    #make plot 
     fig = px.line(x=months, y=temps, title="Средняя температура по месяцам")
     plot_div = pio.to_html(fig, full_html=False)
     
     return render(request, "devices/plot.html", {"plot_div":plot_div})
+
+
+@login_required
+def get_plots(request):
+    devices = Device.objects.all().filter(owner_id = request.user.id)
+    return render(request, 'devices/get_plots.html', {"devices":devices})

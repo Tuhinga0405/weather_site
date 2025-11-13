@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load django_bootstrap5 %}
+
+<div>Список устроств, для которых доступны графики</div>
+{% for device in devices %}
+<ul>
+  <li>
+    <a href="{% url 'get_plot_avg_temp' id=device.id %}">{{ device }}</a>
+  </li>
+</ul>
+{% endfor %}
+{% endblock %}

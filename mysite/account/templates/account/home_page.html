@@ -1,4 +1,4 @@
-{% extends 'account/base.html' %}
+{% extends 'base.html' %}
 
 {% block content %}
 {% load django_bootstrap5 %}
@@ -9,6 +9,7 @@
             <ul class="list-group">
               <li class="list-group-item"><a href="{% url 'add_device'%}">Добавить устройства</a></li>
               <li class="list-group-item"><a href="{% url 'data_all'%}">Посмотреть данные устройств</a></li>
+              <li class="list-group-item"><a href="{% url 'get_plots'%}">Посмотреть графики</a></li>
             </ul>
         </div>
     </div>
