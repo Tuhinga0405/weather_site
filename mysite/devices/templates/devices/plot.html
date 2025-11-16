@@ -3,5 +3,9 @@
 {% block content %}
 {% load django_bootstrap5 %}
   <h1>График температуры</h1>
-  {{ plot_div|safe }}
+  {{ avg_temp|safe }}
+  <h1>Роза ветров</h1>
+  <div id="plot-container" style="width:100%; height:700px;">
+      {{ roza | safe }}
+  </div>
 {% endblock %}

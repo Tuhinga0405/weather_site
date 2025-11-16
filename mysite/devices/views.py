@@ -1,6 +1,5 @@
 import requests as rq
-import plotly.io as pio
-import plotly.express as px
+from .plots import Plot_d 
 from django.http import request
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
@@ -12,7 +11,6 @@ from .forms import DeviceForm
 from rest_framework import generics, mixins
 from rest_framework.response import Response 
 from .serializers import DataSerializer
-from .utils import turning_nums_to_months
 
         
 class DataList(APIView):
@@ -76,18 +74,11 @@ def add_device(request):
     return render(request, 'devices/add_device.html', {'form': form})
 
 
-def get_plot_avg_temp(request, id):
-    r = rq.get(f"http://localhost:8000/get_avg_temp/{id}")
-    data = r.json() 
-
-    months = turning_nums_to_months(list(data.keys())) # api from analitics returns months as nums
-    temps = data.values()
-
-    #make plot 
-    fig = px.line(x=months, y=temps, title="Средняя температура по месяцам")
-    plot_div = pio.to_html(fig, full_html=False)
-    
-    return render(request, "devices/plot.html", {"plot_div":plot_div})
+def plots(request, id):
+    plots = Plot_d(url="http://localhost:8000/plots_data/", id = id)    
+    avg_temp = plots.make_avg_temp_plot()
+    roza = plots.make_roza()
+    return render(request, "devices/plot.html", {"avg_temp":avg_temp, "roza":roza})
 
 
 @login_required
