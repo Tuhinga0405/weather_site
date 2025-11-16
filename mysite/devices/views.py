@@ -1,5 +1,6 @@
 import requests as rq
 from .plots import Plot_d 
+from django.db.models import Count, Q
 from django.http import request
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
@@ -73,7 +74,7 @@ def add_device(request):
         form = DeviceForm()
     return render(request, 'devices/add_device.html', {'form': form})
 
-
+@login_required
 def plots(request, id):
     plots = Plot_d(url="http://localhost:8000/plots_data/", id = id)    
     avg_temp = plots.make_avg_temp_plot()
@@ -83,5 +84,7 @@ def plots(request, id):
 
 @login_required
 def get_plots(request):
-    devices = Device.objects.all().filter(owner_id = request.user.id)
+    # devices = Device.objects.annotate(num_of_rows=Count("data")).filter(owner_id = request.user.id).filter(data__isnull = False)
+    devices = Device.objects.all().annotate(num=Count("data")).filter(owner_id = request.user.id)
+
     return render(request, 'devices/get_plots.html', {"devices":devices})

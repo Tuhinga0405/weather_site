@@ -32,7 +32,7 @@ class Plot_d:
         temps = self.avg_temp.values()
 
         #make plot 
-        fig = px.line(x=months, y=temps, title="Средняя температура по месяцам")
+        fig = px.line(x=months, y=temps)
         plot_temp = pio.to_html(fig, full_html=False)
         return plot_temp
 
@@ -45,8 +45,8 @@ class Plot_d:
         color="speed_group",
         color_continuous_scale="Jet",
         template="plotly_dark",
-        # color_discrete_sequence=px.colors.sequential.Plasma_r
         )
+
         figure.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',  # прозрачный фон
             plot_bgcolor='rgba(0,0,0,0)',   # прозрачный фон области графика

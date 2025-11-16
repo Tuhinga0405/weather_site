@@ -56,11 +56,3 @@ class DeviceMeasurments:
 
 raw_data = DeviceMeasurments(url=f"http://localhost:9000/devices/get_data/2")
 
-figure = plotly.express.bar_polar(
-  raw_data.roza_vetrov(),
-  r="r",
-  theta="wind_deg",
-  color="speed_group",
-  template="plotly_dark",
-  color_discrete_sequence=plotly.express.colors.sequential.Plasma_r
-)

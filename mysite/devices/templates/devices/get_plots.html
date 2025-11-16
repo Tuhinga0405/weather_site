@@ -3,12 +3,30 @@
 {% block content %}
 {% load django_bootstrap5 %}
 
-<div>Список устроств, для которых доступны графики</div>
-{% for device in devices %}
-<ul>
-  <li>
-    <a href="{% url 'get_plot_avg_temp' id=device.id %}">{{ device }}</a>
-  </li>
-</ul>
-{% endfor %}
+<div class="container mt-4">
+  <h3 class="mb-3">Список устройств, для которых доступны графики</h3>
+
+  <div class="list-group">
+    {% for device in devices %}
+      {% if device.num > 108 %}
+        <a href="{% url 'get_plot_avg_temp' id=device.id %}" 
+           class="list-group-item list-group-item-action">
+          ID устройства: {{ device.id }}
+        </a>
+      {% endif %}
+    {% empty %}
+      <div class="alert alert-info">
+        Нет устройств с достаточным количеством данных.
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="alert alert-secondary mt-4" role="alert">
+    <small>
+      ⚠️ Если вы не видите здесь своего устройства, значит оно не собрало достаточное количество данных 
+      (необходимо как минимум <strong>108 записей</strong>).
+    </small>
+  </div>
+</div>
 {% endblock %}
+

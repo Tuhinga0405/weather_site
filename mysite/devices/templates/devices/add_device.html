@@ -4,9 +4,9 @@
 {% load django_bootstrap5 %}
 
 <div class="container mt-4">
-  <h2 class="mb-3">Добавить устройство</h2>
+  <h2 class="mb-3 text-center">Добавить устройство</h2>
 
-  <form action="{% url 'add_device' %}" method="post" class="card p-4 shadow-sm">
+  <form action="{% url 'add_device' %}" method="post" class="card p-4 shadow-sm w-50 mx-auto">
     {% csrf_token %}
 
     <!-- Рендерим форму с bootstrap-оформлением -->
