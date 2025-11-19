@@ -28,11 +28,16 @@ class Plot_d:
 
     def make_avg_temp_plot(self):
         
-        months = turning_nums_to_months(list(self.avg_temp.keys())) # api from analitics returns months as nums
+        months = self.avg_temp.keys()
         temps = self.avg_temp.values()
 
         #make plot 
-        fig = px.line(x=months, y=temps)
+        fig = px.line(x=months, y=temps,
+            labels={
+                        "y":"Градусы (°C)",
+                        "x":"Месяц-Год"
+            },
+        )
         plot_temp = pio.to_html(fig, full_html=False)
         return plot_temp
 
@@ -45,6 +50,7 @@ class Plot_d:
         color="speed_group",
         color_continuous_scale="Jet",
         template="plotly_dark",
+
         )
 
         figure.update_layout(
@@ -63,7 +69,15 @@ class Plot_d:
                     linecolor='black',
                     gridcolor='gray'
                 )
-            )
+            ),
+            title={
+                    'text': self.rosa_vetrov["time_period"],
+                    'y':0.99,
+                    'x':0.5,
+                    'xanchor': "center",
+                    'yanchor': "top"
+            },
+            margin_l=130,
         )
 
         plot_roza = pio.to_html(figure, full_html=False)

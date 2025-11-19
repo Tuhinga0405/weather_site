@@ -6,6 +6,7 @@ User = get_user_model() #Нужно, чтобы при замене на кас�
 class Device(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
     owner_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    nickname = models.CharField(max_length=100, default="device")
 
 class Data(models.Model):
     device = models.ForeignKey(

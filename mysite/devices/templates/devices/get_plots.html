@@ -11,7 +11,8 @@
       {% if device.num > 108 %}
         <a href="{% url 'get_plot_avg_temp' id=device.id %}" 
            class="list-group-item list-group-item-action">
-          ID устройства: {{ device.id }}
+          ID устройства: {{ device.id }}, 
+          Никнейм: {{ device.nickname }}
         </a>
       {% endif %}
     {% empty %}

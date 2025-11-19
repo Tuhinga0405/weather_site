@@ -5,17 +5,22 @@
  <div class="container py-4">
     <h1 class="mb-4">Данные устройств</h1>
 
-    <!-- Фильтр/поиск (опционально) -->
-    <form class="row g-3 mb-3" method="get">
+    <form class="row g-3 mb-3 align-items-end" method="get">
       <div class="col-auto">
-        <input type="text" name="device" value="{{ request.GET.device }}" class="form-control" placeholder="ID устройства">
+        <label for="device" class="form-label">ID устройства</label>
+        <input type="text" id="device" name="device" value="{{ request.GET.device }}" class="form-control" placeholder="Введите ID">
       </div>
+
       <div class="col-auto">
-        <input type="date" name="from" value="{{ request.GET.from }}" class="form-control" placeholder="От даты">
+        <label for="from" class="form-label">От</label>
+        <input type="date" id="from" name="from" value="{{ request.GET.from }}" class="form-control">
       </div>
+
       <div class="col-auto">
-        <input type="date" name="to" value="{{ request.GET.to }}" class="form-control" placeholder="До даты">
+        <label for="to" class="form-label">До</label>
+        <input type="date" id="to" name="to" value="{{ request.GET.to }}" class="form-control">
       </div>
+
       <div class="col-auto">
         <button type="submit" class="btn btn-primary">Применить</button>
         <a href="." class="btn btn-outline-secondary">Сбросить</a>
@@ -28,6 +33,7 @@
           <tr>
             <th scope="col">#</th>
             <th scope="col">Устройство</th>
+            <th scope="col">Никнейм</th>
             <th scope="col">Дата</th>
             <th scope="col">Температура</th>
             <th scope="col">Давление</th>
@@ -42,6 +48,7 @@
             <tr>
               <th scope="row">{{ forloop.counter }}</th>
               <td>ID: {{ row.device_id }}</td>
+              <td>{{ row.device.nickname }} </td>
               <td>{{ row.date|date:"Y-m-d H:i:s" }}</td>
               <td>{{ row.temp }}</td>
               <td>{{ row.pressure }}</td>

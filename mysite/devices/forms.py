@@ -2,6 +2,8 @@ from django import forms
 from .models import Device
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.core import validators
+
 
 class DeviceForm(forms.Form):
     id = forms.IntegerField(label="ID устройства")
@@ -19,3 +21,24 @@ class DeviceForm(forms.Form):
                                   params={"id": device_id})
 
         return device_id
+
+
+class DeviceChangeNameForm(forms.Form):
+    nickname = forms.CharField(label="Никнейм устройства", validators=[validators.validate_slug])
+
+    def clean_nickname(self):
+        nickname = self.cleaned_data['nickname']
+
+        devices = Device.objects.all()
+
+        matching_nicknames=list(filter(lambda x: x.nickname == nickname, devices))
+
+        if matching_nicknames:
+            raise ValidationError(
+                _("Устройство с никнеймом: %(nickname)s уже существует"),
+                code="invalid",
+                params={"nickname": nickname},
+            )
+
+        return nickname
+        

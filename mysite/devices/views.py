@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
 from .models import Data, Device
 from django.core.paginator import Paginator
-from .forms import DeviceForm
+from .forms import DeviceForm, DeviceChangeNameForm
 from rest_framework import generics, mixins
 from rest_framework.response import Response 
 from .serializers import DataSerializer
@@ -25,8 +25,7 @@ class DataList(APIView):
 
 @login_required
 def data_all(request): 
-    qs = Data.objects.filter(device__owner_id = request.user.id).select_related('device').order_by('-date')
-
+    qs = Data.objects.filter(device__owner_id = request.user.id).select_related('device').order_by('date')
 
     # фильтр по устройству (по id)
     device_id = request.GET.get('device')
@@ -88,3 +87,21 @@ def get_plots(request):
     devices = Device.objects.all().annotate(num=Count("data")).filter(owner_id = request.user.id)
 
     return render(request, 'devices/get_plots.html', {"devices":devices})
+
+
+@login_required
+def change_device_nickname(request, id):
+    if request.method == "POST":
+        form = DeviceChangeNameForm(request.POST)
+        if form.is_valid():
+            device = Device.objects.get(id=id)
+            device.nickname = form.cleaned_data['nickname']
+            device.save()
+    else:
+        form = DeviceChangeNameForm()
+    return render(request, 'devices/change_device_name.html',{'form':form})
+
+@login_required
+def list_devices(request): 
+    devices = Device.objects.all().order_by('id')
+    return render(request, 'devices/list_devices.html', {'devices': devices})

@@ -12,10 +12,16 @@ class DeviceMeasurments:
         self.data = rq.get(url).json()
         self.data_frame = pd.DataFrame(self.data)
         self.data_frame["date"] = pd.to_datetime(self.data_frame["date"])
+        self.time_period = (
+            "C " +
+            str(self.data_frame["date"].dt.strftime('%m-%y').min()) + 
+            " по "
+            + str(self.data_frame["date"].dt.strftime('%m-%y').max())
+            )
 
     def avg_temp(self):
         
-        self.data_frame["month"] = self.data_frame["date"].dt.month
+        self.data_frame["month"] = self.data_frame["date"].dt.strftime('%m-%y')
 
         # calculating avg_temp per_month
         monthly_avg = np.round(self.data_frame.groupby("month")["temp"].mean(), 2)
@@ -51,7 +57,10 @@ class DeviceMeasurments:
         # Вычисляем r как процент
         grouped["r"] = (grouped["count"] / total * 100).round(2)
         
-        return dict(grouped)
+        res = dict(grouped)
+        res["time_period"] = self.time_period
+
+        return res 
 
 
 raw_data = DeviceMeasurments(url=f"http://localhost:9000/devices/get_data/2")
