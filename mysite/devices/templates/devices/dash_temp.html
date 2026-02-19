@@ -1,0 +1,44 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+{% load django_bootstrap5 %}
+{% load plotly_dash %}
+
+<div class="container my-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Средняя температура по месяцам</h4>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">
+        Выберите устройство и просмотрите динамику температуры.
+      </p>
+      <div class="{% plotly_class name="AvgTemp" %}">
+        {% plotly_app name="AvgTemp" ratio=0.65  %}
+      </div>
+    </div>
+    <div class="card-footer text-end">
+      <small class="text-muted">Данные обновляются автоматически</small>
+    </div>
+  </div>
+</div>
+<div class="container my-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Средняя влажность по месяцам</h4>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">
+        Выберите устройство и просмотрите динамику температуры.
+      </p>
+      <div class="{% plotly_class name="Humidity" %}">
+        {% plotly_app name="Humidity" ratio=0.65 %}
+      </div>
+    </div>
+    <div class="card-footer text-end">
+      <small class="text-muted">Данные обновляются автоматически</small>
+    </div>
+  </div>
+</div>
+{% endblock %}

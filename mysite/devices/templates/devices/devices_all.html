@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load django_bootstrap5 %}
+ <div class="container py-4">
+    <h1 class="mb-4">Данные устройств</h1>
+
+    <form class="row g-3 mb-3 align-items-end" method="get">
+      <div class="col-auto">
+        <label for="device" class="form-label">ID устройства</label>
+        <input type="text" id="device" name="device" value="{{ request.GET.device }}" class="form-control" placeholder="Введите ID">
+      </div>
+
+      <div class="col-auto">
+        <label for="from" class="form-label">От</label>
+        <input type="date" id="from" name="from" value="{{ request.GET.from }}" class="form-control">
+      </div>
+
+      <div class="col-auto">
+        <label for="to" class="form-label">До</label>
+        <input type="date" id="to" name="to" value="{{ request.GET.to }}" class="form-control">
+      </div>
+
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Применить</button>
+        <a href="." class="btn btn-outline-secondary">Сбросить</a>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Устройство</th>
+            <th scope="col">Псевдоним</th>
+            <th scope="col">Дата</th>
+            <th scope="col">Температура</th>
+            <th scope="col">Давление</th>
+            <th scope="col">Влажность</th>
+            <th scope="col">Скорость ветра</th>
+            <th scope="col">Направление ветра</th>
+            <th scope="col">УФ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data %}
+            <tr>
+              <th scope="row">{{ forloop.counter }}</th>
+              <td>ID: {{ row.device_id }}</td>
+              <td>{{ row.device.nickname }} </td>
+              <td>{{ row.date|date:"Y-m-d H:i:s" }}</td>
+              <td>{{ row.temp }}</td>
+              <td>{{ row.pressure }}</td>
+              <td>{{ row.humidity }}</td>
+              <td>
+                {% if row.wind_speed is not None %}
+                  {{ row.wind_speed }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.wind_direction %}
+                  {{ row.wind_direction }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{{ row.uv }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">
+                Данных нет
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Пагинация (если используешь Django Paginator) -->
+    {% if is_paginated %}
+      <nav aria-label="Пагинация">
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.device %}&device={{ request.GET.device }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to }}{% endif %}">Назад</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Назад</span></li>
+          {% endif %}
+
+          <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ paginator.num_pages }}</span></li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.device %}&device={{ request.GET.device }}{% endif %}{% if request.GET.from %}&from={{ request.GET.from }}{% endif %}{% if request.GET.to %}&to={{ request.GET.to %}{% endif %}">Вперёд</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Вперёд</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+
+{% endblock %}

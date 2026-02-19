@@ -1,0 +1,11 @@
+*.pyc
+*~
+__pycache__/
+.env
+myenv/
+venv/
+db.sqlite3
+/static/
+.vscode
+.history/
+*.code-workspace
