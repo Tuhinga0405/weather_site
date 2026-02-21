@@ -1,3 +1,4 @@
+from serivces.open_meteo_api import update_weather_data
 from django.shortcuts import render, redirect
 from .forms import RegistationForm, LoginForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -18,6 +19,8 @@ def registration(request):
 
 def home_page(request):
     if request.user.is_authenticated:
+        # breakpoint()
+        update_weather_data()
         return render(request, 'account/home_page.html')
     return render(request, 'account/main_page.html')
 

@@ -19,12 +19,12 @@ class Data(models.Model):
             related_name="data"         # удобно для обратного доступа: device.data.all()
         )
     date = models.DateTimeField()
-    temp = models.FloatField()
-    pressure = models.FloatField()
+    temp = models.DecimalField(max_digits=4, decimal_places=2)
+    pressure = models.IntegerField()
     humidity = models.FloatField()
-    wind_speed = models.FloatField(null=True)
+    wind_speed = models.DecimalField(max_digits=4, decimal_places=2, null=True)
     wind_direction = models.CharField(max_length=20, null=True)
-    uv = models.FloatField()
+    uv = models.IntegerField()
 
     class Meta:
         ordering = ["date"]

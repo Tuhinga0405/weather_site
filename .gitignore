@@ -9,3 +9,9 @@ requirements.txt
 
 # Virtual environments
 .venv
+
+.cache.sqlite
+*.sqlite
+*.sqlite3
+**/.cache.sqlite
+
