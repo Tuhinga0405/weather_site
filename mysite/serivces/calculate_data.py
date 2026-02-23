@@ -1,17 +1,23 @@
-import requests as rq
-import plotly.io as pio
-import plotly.express as px
 import pandas as pd
 import numpy as np
 from devices.models import Data, Device
 from django.db.models import Count
+from pprint import pprint
 
-class Plots:
-     
+
+class DataForPlots:
+
     def __init__(self, user_id):
+
+        ''' создается поле num, которое отображает кол-во записей
+            для каждого устройства. Условие num__gte=108 нужно 
+            для отбора устройств которые собирали данные меньше 
+            месяца
+        '''
         self.qs = (Data.objects.all().filter(device__owner_id=user_id)
               .annotate(num=Count("device__data"))
               .filter(num__gte=108)).values()
+
         self.df = pd.DataFrame(self.qs)
 
         # в бд храняться numeric, для нормлаьной работы с pandas
@@ -19,13 +25,8 @@ class Plots:
         self.df['temp'] = self.df['temp'].astype(float)
         self.df['wind_speed'] = self.df['wind_speed'].astype(float)
 
+        # нужно, чтобы преобразовалось в удобный формат pandas
         self.df["date"] = pd.to_datetime(self.df["date"])
-        self.time_period = (
-            "C " +
-            str(self.df["date"].dt.strftime('%m-%y').min()) + 
-            " по "
-            + str(self.df["date"].dt.strftime('%m-%y').max())
-        )
 
     def avg_temp(self):
                 
@@ -33,21 +34,29 @@ class Plots:
 
         # calculating avg_temp per_month
         result = (self.df.groupby(["device_id", "month"])["temp"]
-                  .mean().round(2)
-                  .unstack(fill_value=None).to_dict("index"))
+                  .mean()
+                  .round(2)
+                  .unstack()  # пустые ячейки станут NaN
+                  .to_dict("index")
+        )
 
         return result
+
 
     def avg_humidity(self): 
         self.df["month"] = self.df["date"].dt.strftime('%m-%y')
 
         res = (self.df.groupby(["device_id", "month"])["humidity"]
-               .mean().round(2)
-               .unstack(fill_value=None).to_dict("index"))
+               .mean()
+               .round(2)
+               .unstack()
+               .to_dict("index")
+        )
 
         return res
 
-    def roza_vetrov(self):
+
+    def wind_rose(self):
 
         direction_to_deg = {
             "С": 0, "С-СВ": 22.5, "СВ": 45, "В-СВ": 67.5,
@@ -78,6 +87,7 @@ class Plots:
         )
 
         results = {}
+
         for device_id, subdf in grouped.groupby("device_id"):
             total = subdf["count"].sum()
             subdf["r"] = (subdf["count"] / total * 100).round(2)
@@ -97,64 +107,3 @@ class Plots:
             }
 
         return {"devices": results}
-
-    #make_plots
-    def avg_temp_plot(self, device_id):
-        data = self.avg_temp()[device_id]
-
-        months = data.keys()
-        temps = data.values()
-
-        #make plot 
-        fig = px.line(x=months, y=temps,
-            labels={
-                        "y":"Градусы (°C)",
-                        "x":"Месяц-Год"
-            },
-        )
-        plot_temp = pio.to_html(fig, full_html=False)
-        return plot_temp
-    
-    def roza_vetrov_plot(self, device_id):
-        data = self.roza_vetrov()["devices"][device_id]
-
-
-        figure = px.bar_polar(
-        data["data"],
-        r="r",
-        theta="wind_deg",
-        color="speed_group",
-        color_continuous_scale="Jet",
-        template="plotly_dark",
-
-        )
-
-        figure.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',  # прозрачный фон
-            plot_bgcolor='rgba(0,0,0,0)',   # прозрачный фон области графика
-            font=dict(color='black'),      # белый цвет текста
-            polar=dict(
-                bgcolor='rgba(0,0,0,0)',
-                angularaxis=dict(
-                    tickfont=dict(color='black'),  # подписи направлений
-                    linecolor='white',
-                    gridcolor='gray'
-                ),
-                radialaxis=dict(
-                    tickfont=dict(color='rgba(0,0,0,0)'),  # подписи радиуса
-                    linecolor='black',
-                    gridcolor='gray'
-                )
-            ),
-            title={
-                    'text': data["time_period"],
-                    'y':0.99,
-                    'x':0.5,
-                    'xanchor': "center",
-                    'yanchor': "top"
-            },
-            margin_l=130,
-        )
-
-        plot_roza = pio.to_html(figure, full_html=False)
-        return plot_roza

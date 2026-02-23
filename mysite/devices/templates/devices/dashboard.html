@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+<script src="{% static 'devices/js/dashboard.js' %}"></script>
+{% block content %}
+{% load django_bootstrap5 %}
+
+<div class="container py-5">
+    <script type="text/javascript">
+   $(function(){
+      alert("My First jQuery Test");
+   });
+    </script>
+    <button onclick="myFunction()">Click me!</button>
+</div>
+{% endblock %}

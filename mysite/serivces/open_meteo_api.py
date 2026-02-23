@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from devices.models import Data, Device
 
 
-# --- Вспомогательные функции ---
-
 def deg_to_sector(deg: float) -> str:
-    """Округляет угол в градусах до ближайшего сектора (каждые 22.5°)."""
+    ''' Вначале использовались данные с погоды mail.ru (в виде с, ю и т.д), 
+        и посторение графиков для розы ветров заточено под такую систему
+    '''
     deg = deg % 360
     sectors = {
         0: "С", 22.5: "С-СВ", 45: "СВ", 67.5: "В-СВ",
@@ -22,16 +22,15 @@ def deg_to_sector(deg: float) -> str:
     nearest = keys[np.argmin(np.abs(keys - deg))]
     return sectors[nearest]
 
-
+# данные с api приходят не в мм. ртутного столба
 def convert_pressure_to_mmhg(pressure_hpa: pd.Series) -> pd.Series:
-    """Перевод давления из hPa в мм рт. ст. с округлением до 2 знаков."""
     return (pressure_hpa.astype("float64") * 0.75006).round(2)
 
 
 def fetch_weather(latitude: float, longitude: float,
                   start_date: str, end_date: str,
                   device_id: int) -> pd.DataFrame:
-    """Загружает и обрабатывает погодные данные для указанной локации."""
+
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": latitude,
@@ -84,11 +83,9 @@ def fetch_weather(latitude: float, longitude: float,
 
 
 def get_date_range_for_device(device_id: int) -> tuple[str, str]:
-    """
-    Исправленная функция для определения диапазона дат.
-    Теперь правильно работает с объектами datetime.
-    """
+
     today = datetime.now().date()
+    last_date = get_last_date(device_id)
 
     # if is_table_empty():
         # Правильное вычисление даты 4 недели назад
@@ -96,7 +93,6 @@ def get_date_range_for_device(device_id: int) -> tuple[str, str]:
         # end_date = today.strftime("%Y-%m-%d")
         # return start_date, end_date
 
-    last_date = get_last_date(device_id)
     # if last_date is None:
     #     start_date = (datetime.now() - timedelta(weeks=4)).strftime("%Y-%m-%d")
     #     end_date = today.strftime("%Y-%m-%d")
@@ -112,8 +108,8 @@ def get_date_range_for_device(device_id: int) -> tuple[str, str]:
 def update_weather_data():
     """Основная функция обновления погодных данных."""
     locations = [
-        {"latitude": 53.9, "longitude": 27.5667, "device_id": 1},
-        {"latitude": 52.0975, "longitude": 23.6878, "device_id": 2}
+        {"latitude": 53.9, "longitude": 27.5667, "device_id": 1}, # минск
+        {"latitude": 52.0975, "longitude": 23.6878, "device_id": 2} # брест
     ]
 
     for location in locations:
