@@ -4,8 +4,14 @@ __pycache__/
 .env
 myenv/
 venv/
-db.sqlite3
 /static/
 .vscode
 .history/
 *.code-workspace
+
+# Cache files
+.cache.sqlite
+*.sqlite
+*.sqlite3
+**/.cache.sqlite
+
