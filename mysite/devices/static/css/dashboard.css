@@ -1,0 +1,45 @@
+/* === Добавьте в style.css === */
+
+/* Контейнер для всех роз ветров — сетка */
+#windRoseChart {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Контейнер отдельного устройства */
+.wind-rose-container {
+    background: #fff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Заголовок устройства */
+.wind-rose-container h5 {
+    margin-bottom: 0.5rem;
+    text-align: center;
+    width: 100%;
+}
+
+/* Канвас для полярной диаграммы — квадратный */
+.wind-rose-container canvas {
+    width: 100% !important;
+    max-width: 300px;
+    height: 300px !important;
+    aspect-ratio: 1 / 1;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+    #windRoseChart {
+        grid-template-columns: 1fr;
+    }
+    .wind-rose-container canvas {
+        max-width: 250px;
+        height: 250px !important;
+    }
+}

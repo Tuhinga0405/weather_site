@@ -1,15 +1,48 @@
 {% extends 'base.html' %}
 {% load static %}
-<script src="{% static 'devices/js/dashboard.js' %}"></script>
-{% block content %}
-{% load django_bootstrap5 %}
 
-<div class="container py-5">
-    <script type="text/javascript">
-   $(function(){
-      alert("My First jQuery Test");
-   });
-    </script>
-    <button onclick="myFunction()">Click me!</button>
+
+
+
+{% block content %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% load django_bootstrap5 %}
+<!-- === HTML-контролы (добавьте перед canvas) === -->
+<div class="chart-controls mb-3 p-3 border rounded bg-light">
+    <div class="row g-3 align-items-end">
+        <!-- Выбор устройств -->
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Устройства:</label>
+            <div id="deviceCheckboxes" class="d-flex flex-wrap gap-2">
+                <!-- Генерируется JS -->
+            </div>
+        </div>
+        
+        <!-- Диапазон месяцев -->
+        <div class="col-md-6">
+            <label class="form-label fw-bold">Период:</label>
+            <div class="d-flex gap-2">
+                <select id="monthStart" class="form-select form-select-sm"></select>
+                <span class="align-self-center">—</span>
+                <select id="monthEnd" class="form-select form-select-sm"></select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Кнопки управления -->
+    <div class="mt-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" id="btnApply">Применить</button>
+        <button class="btn btn-sm btn-outline-secondary" id="btnReset">Сбросить</button>
+        <button class="btn btn-sm btn-outline-info" id="btnAddMonth">+ Месяц</button>
+        <button class="btn btn-sm btn-outline-warning" id="btnRemoveMonth">- Месяц</button>
+    </div>
+</div>
+<div class="container mt-4">
+    <canvas id="temperatureChart" height="100"></canvas>
+    <canvas id="humidityChart" height="100" class="mt-4"></canvas>
+    
+    <!-- Контейнер для розы ветров (обязательно с id) -->
+    <div id="windRoseChart" class="mt-4"></div>
 </div>
 {% endblock %}
