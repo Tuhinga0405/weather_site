@@ -3,9 +3,12 @@ $(document).ready(function() {
     let allMonths = [];
     let charts = { temp: null, humidity: null };
     
+    const $el = $('#chartContainer');
+    const user_id = $el.data('user-id');
+
     // === Загрузка данных ===
     $.ajax({
-        url: '/devices/plots_data/1',
+        url: '/devices/plots_data/' + user_id,
         method: 'GET',
         dataType: 'json',
         success: function(response) {

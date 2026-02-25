@@ -5,7 +5,12 @@
 
 
 {% block content %}
+
+<div id="chartContainer" 
+     data-user-id="{{ request.user.id }}">
+</div>
 <script src="{% static 'js/dashboard.js' %}"></script>
+
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 {% load django_bootstrap5 %}
 <!-- === HTML-контролы (добавьте перед canvas) === -->
