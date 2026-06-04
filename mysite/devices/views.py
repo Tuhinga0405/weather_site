@@ -11,8 +11,21 @@ from .models import Data, Device
 from django.core.paginator import Paginator
 from .forms import DeviceForm, DeviceCreateForm, DeviceUpdateForm
 from rest_framework.response import Response
+from serivces.calculate_data import DataForPlots
 import json
 
+
+class PlotsData(APIView):
+
+    def get(self, request, user_id):
+        raw_data = DataForPlots(user_id=user_id)
+
+        response_data = {
+            "avg_temp": raw_data.avg_temp(),
+            "avg_humidity": raw_data.avg_humidity(),
+            "wind_rose": raw_data.wind_rose(),
+        }
+        return Response(response_data)
 
 @login_required
 def data_all(request): 
@@ -68,6 +81,10 @@ def get_plots(request):
 
     return render(request, 'devices/get_plots.html', {"devices":devices})
 
+
+@login_required
+def dashboard(request):
+    return render(request, 'devices/dashboard.html')
 
 class DeviceUpdateView(UpdateView):
     model = Device

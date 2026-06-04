@@ -18,11 +18,16 @@ class Data(models.Model):
             on_delete=models.CASCADE,   # аналог ondelete="CASCADE"
             related_name="data"         # удобно для обратного доступа: device.data.all()
         )
+
+    # в temp и wind_sped DecimalField т.к. в бд заносяться не округленные
+    # данные, даже если округлить их через pandas
     date = models.DateTimeField()
     temp = models.DecimalField(max_digits=4, decimal_places=2)
     pressure = models.IntegerField()
     humidity = models.FloatField()
-    wind_speed = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    wind_speed = models.DecimalField(max_digits=4,
+                                     decimal_places=2,
+                                     null=True)
     wind_direction = models.CharField(max_length=20, null=True)
     uv = models.IntegerField()
 
