@@ -19,6 +19,7 @@ class PlotsData(APIView):
 
     def get(self, request, user_id):
         raw_data = DataForPlots(user_id=user_id)
+
         response_data = {
             "avg_temp": raw_data.avg_temp(),
             "avg_humidity": raw_data.avg_humidity(),

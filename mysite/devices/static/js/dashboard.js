@@ -302,4 +302,5 @@ $(document).ready(function() {
         };
         return labels[deg] || `${deg}°`;
     }
+
 });
