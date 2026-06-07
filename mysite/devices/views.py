@@ -15,7 +15,7 @@ from serivces.calculate_data import DataForPlots
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from serivces.report_generator import ReportGenerator
-from weasyprint import HTML
+from weasyprint import HTML, CSS
 import io
 import json
 
@@ -116,8 +116,8 @@ def devices(request):
 
 @login_required
 def reports(request):
-    """Страница генерации отчётов."""
-    period = request.GET.get('period', 'week')  # По умолчанию — неделя
+    """Страница генерации отчётов (HTML-версия)."""
+    period = request.GET.get('period', 'week')
     
     if period not in ['day', 'week', 'month', 'year']:
         period = 'week'
@@ -126,7 +126,6 @@ def reports(request):
     context = generator.get_report_context(period)
     
     return render(request, 'devices/reports.html', context)
-
 
 @login_required
 def report_pdf(request):
@@ -139,21 +138,32 @@ def report_pdf(request):
     generator = ReportGenerator(request.user.id)
     context = generator.get_report_context(period)
     
-    # Рендер шаблона
+    # Рендер HTML-шаблона
     html_string = render_to_string('devices/report_pdf.html', context)
     
-    # Генерация PDF с настройками для кириллицы
+    # Генерация PDF с явными настройками
     pdf_file = io.BytesIO()
+    
     HTML(
         string=html_string,
-        base_url=request.build_absolute_uri('/')  # Для корректных относительных путей
+        base_url=request.build_absolute_uri('/')  # Важно для относительных путей
     ).write_pdf(
         pdf_file,
         stylesheets=[
-            # Опционально: внешний CSS для PDF
-            # CSS(string='@page { size: A4; margin: 2cm; }')
-        ]
+            CSS(string='''
+                @page {
+                    size: A4;
+                    margin: 2cm;
+                }
+                body {
+                    font-family: "DejaVu Sans", sans-serif;
+                }
+            ''')
+        ],
+        optimize_size=('fonts', 'images'),  # Оптимизация размера файла
+        zoom=1.0  # Масштабирование
     )
+    
     pdf_file.seek(0)
     
     response = HttpResponse(pdf_file, content_type='application/pdf')

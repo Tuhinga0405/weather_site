@@ -1,5 +1,3 @@
-<!-- templates/devices/report_pdf.html -->
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -17,10 +15,10 @@
         }
         
         body {
-            font-family: "DejaVu Sans", "Arial Unicode MS", sans-serif;
+            font-family: "DejaVu Sans", "Arial", sans-serif;
             font-size: 11pt;
-            line-height: 1.4;
-            color: #333;
+            line-height: 1.5;
+            color: #333333;
         }
         
         h1 {
@@ -29,34 +27,37 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             font-size: 18pt;
+            font-weight: bold;
         }
         
         h3 {
-            color: #444;
+            color: #444444;
             margin: 25px 0 15px 0;
             font-size: 13pt;
+            font-weight: bold;
             border-left: 4px solid #007bff;
             padding-left: 10px;
         }
         
         .period {
-            color: #666;
+            color: #666666;
             margin-bottom: 25px;
             font-style: italic;
+            font-size: 10pt;
         }
         
         .card {
-            border: 1px solid #ddd;
+            border: 1px solid #dddddd;
             border-radius: 6px;
             padding: 15px;
             margin-bottom: 20px;
-            background: #fff;
+            background: #ffffff;
             page-break-inside: avoid;
         }
         
         .card-header {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
+            background: #007bff;
+            color: #ffffff;
             padding: 10px 15px;
             border-radius: 4px 4px 0 0;
             margin: -15px -15px 15px -15px;
@@ -65,30 +66,32 @@
         }
         
         .card-header.humidity {
-            background: linear-gradient(135deg, #17a2b8, #117a8b);
+            background: #17a2b8;
         }
         
         .stat-row {
-            display: flex;
-            justify-content: space-between;
+            display: table;
+            width: 100%;
             margin: 10px 0;
         }
         
         .stat-item {
+            display: table-cell;
             text-align: center;
-            flex: 1;
+            width: 33%;
             padding: 0 10px;
-            border-right: 1px dashed #eee;
+            border-right: 1px dashed #eeeeee;
         }
         
-        .stat-item:last-child { border-right: none; }
+        .stat-item:last-child {
+            border-right: none;
+        }
         
         .stat-label {
             font-size: 10pt;
-            color: #666;
+            color: #666666;
             margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .stat-value {
@@ -100,7 +103,7 @@
         
         .stat-detail {
             font-size: 9pt;
-            color: #888;
+            color: #888888;
             line-height: 1.3;
         }
         
@@ -113,35 +116,50 @@
         
         th {
             background: #f8f9fa;
-            border: 1px solid #ddd;
+            border: 1px solid #dddddd;
             padding: 10px;
             text-align: left;
             font-weight: bold;
-            color: #333;
+            color: #333333;
         }
         
         td {
-            border: 1px solid #ddd;
+            border: 1px solid #dddddd;
             padding: 8px 10px;
-            color: #444;
+            color: #444444;
         }
         
-        tr:nth-child(even) { background: #f9f9f9; }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
         
         .footer {
             margin-top: 40px;
             padding-top: 15px;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #dddddd;
             font-size: 9pt;
-            color: #999;
+            color: #999999;
             text-align: center;
         }
         
-        .text-center { text-align: center; }
-        .text-muted { color: #666; }
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-muted {
+            color: #666666;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #eeeeee;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
+    <!-- Заголовок -->
     <h1>📊 Отчёт по погодным данным</h1>
     
     <p class="period">
@@ -149,7 +167,7 @@
     </p>
     
     {% if statistics.error %}
-        <p style="color: #dc3545; font-weight: bold;">
+        <p style="color: #dc3545; font-weight: bold; font-size: 12pt;">
             ⚠️ {{ statistics.error }}
         </p>
     {% else %}
@@ -210,6 +228,29 @@
             </div>
         </div>
         
+        <!-- Графики -->
+        {% if statistics.chart_images.temp_chart or statistics.chart_images.humidity_chart %}
+        <h3>📈 Графики средних значений</h3>
+        
+        {% if statistics.chart_images.temp_chart %}
+        <div class="card" style="page-break-inside: avoid;">
+            <div class="card-header">🌡️ Динамика температуры</div>
+            <div class="text-center">
+                <img src="{{ statistics.chart_images.temp_chart }}" alt="График температуры">
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if statistics.chart_images.humidity_chart %}
+        <div class="card" style="page-break-inside: avoid;">
+            <div class="card-header humidity">💧 Динамика влажности</div>
+            <div class="text-center">
+                <img src="{{ statistics.chart_images.humidity_chart }}" alt="График влажности">
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        
         <!-- Сводка по устройствам -->
         <h3>📋 Сводка по устройствам</h3>
         <table>
@@ -235,7 +276,7 @@
             </tbody>
         </table>
         
-        <!-- Детали экстремальных значений (упрощённое условие) -->
+        <!-- Детали экстремумов -->
         {% if statistics.show_extremes_details %}
         <h3>🔍 Детали экстремальных значений</h3>
         <table>
@@ -276,6 +317,7 @@
         </table>
         {% endif %}
         
+        <!-- Футер -->
         <div class="footer">
             Отчёт сгенерирован автоматически {{ end_date }}<br>
             Weather Monitoring System
