@@ -1,0 +1,286 @@
+<!-- templates/devices/report_pdf.html -->
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт по погодным данным</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Страница " counter(page) " из " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: "DejaVu Sans", "Arial Unicode MS", sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+        }
+        
+        h1 {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 18pt;
+        }
+        
+        h3 {
+            color: #444;
+            margin: 25px 0 15px 0;
+            font-size: 13pt;
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+        }
+        
+        .period {
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #fff;
+            page-break-inside: avoid;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px 4px 0 0;
+            margin: -15px -15px 15px -15px;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        
+        .card-header.humidity {
+            background: linear-gradient(135deg, #17a2b8, #117a8b);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            padding: 0 10px;
+            border-right: 1px dashed #eee;
+        }
+        
+        .stat-item:last-child { border-right: none; }
+        
+        .stat-label {
+            font-size: 10pt;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #007bff;
+            margin: 5px 0;
+        }
+        
+        .stat-detail {
+            font-size: 9pt;
+            color: #888;
+            line-height: 1.3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            color: #444;
+        }
+        
+        tr:nth-child(even) { background: #f9f9f9; }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 9pt;
+            color: #999;
+            text-align: center;
+        }
+        
+        .text-center { text-align: center; }
+        .text-muted { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>📊 Отчёт по погодным данным</h1>
+    
+    <p class="period">
+        Период: <strong>{{ start_date }}</strong> — <strong>{{ end_date }}</strong>
+    </p>
+    
+    {% if statistics.error %}
+        <p style="color: #dc3545; font-weight: bold;">
+            ⚠️ {{ statistics.error }}
+        </p>
+    {% else %}
+        
+        <!-- Температура -->
+        <div class="card">
+            <div class="card-header">🌡️ Температура</div>
+            <div class="stat-row">
+                <div class="stat-item">
+                    <div class="stat-label">Минимум</div>
+                    <div class="stat-value">{{ statistics.temperature.min.value }}°C</div>
+                    <div class="stat-detail">
+                        <strong>{{ statistics.temperature.min.device }}</strong><br>
+                        {{ statistics.temperature.min.date }}
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Средняя</div>
+                    <div class="stat-value">{{ statistics.temperature.avg }}°C</div>
+                    <div class="stat-detail text-muted">по всем устройствам</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Максимум</div>
+                    <div class="stat-value">{{ statistics.temperature.max.value }}°C</div>
+                    <div class="stat-detail">
+                        <strong>{{ statistics.temperature.max.device }}</strong><br>
+                        {{ statistics.temperature.max.date }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Влажность -->
+        <div class="card">
+            <div class="card-header humidity">💧 Влажность</div>
+            <div class="stat-row">
+                <div class="stat-item">
+                    <div class="stat-label">Минимум</div>
+                    <div class="stat-value">{{ statistics.humidity.min.value }}%</div>
+                    <div class="stat-detail">
+                        <strong>{{ statistics.humidity.min.device }}</strong><br>
+                        {{ statistics.humidity.min.date }}
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Средняя</div>
+                    <div class="stat-value">{{ statistics.humidity.avg }}%</div>
+                    <div class="stat-detail text-muted">по всем устройствам</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Максимум</div>
+                    <div class="stat-value">{{ statistics.humidity.max.value }}%</div>
+                    <div class="stat-detail">
+                        <strong>{{ statistics.humidity.max.device }}</strong><br>
+                        {{ statistics.humidity.max.date }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Сводка по устройствам -->
+        <h3>📋 Сводка по устройствам</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Устройство</th>
+                    <th class="text-center">Средняя температура</th>
+                    <th class="text-center">Средняя влажность</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device_nickname, data in statistics.averages.items %}
+                <tr>
+                    <td><strong>{{ device_nickname }}</strong></td>
+                    <td class="text-center">{{ data.temp }}°C</td>
+                    <td class="text-center">{{ data.humidity }}%</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">Нет данных для отображения</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Детали экстремальных значений (упрощённое условие) -->
+        {% if statistics.show_extremes_details %}
+        <h3>🔍 Детали экстремальных значений</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Параметр</th>
+                    <th>Значение</th>
+                    <th>Устройство</th>
+                    <th>Дата и время</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🌡️ Мин. температура</td>
+                    <td><strong>{{ statistics.temperature.min.value }}°C</strong></td>
+                    <td>{{ statistics.temperature.min.device }}</td>
+                    <td>{{ statistics.temperature.min.date }}</td>
+                </tr>
+                <tr>
+                    <td>🌡️ Макс. температура</td>
+                    <td><strong>{{ statistics.temperature.max.value }}°C</strong></td>
+                    <td>{{ statistics.temperature.max.device }}</td>
+                    <td>{{ statistics.temperature.max.date }}</td>
+                </tr>
+                <tr>
+                    <td>💧 Мин. влажность</td>
+                    <td><strong>{{ statistics.humidity.min.value }}%</strong></td>
+                    <td>{{ statistics.humidity.min.device }}</td>
+                    <td>{{ statistics.humidity.min.date }}</td>
+                </tr>
+                <tr>
+                    <td>💧 Макс. влажность</td>
+                    <td><strong>{{ statistics.humidity.max.value }}%</strong></td>
+                    <td>{{ statistics.humidity.max.device }}</td>
+                    <td>{{ statistics.humidity.max.date }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+        
+        <div class="footer">
+            Отчёт сгенерирован автоматически {{ end_date }}<br>
+            Weather Monitoring System
+        </div>
+        
+    {% endif %}
+</body>
+</html>

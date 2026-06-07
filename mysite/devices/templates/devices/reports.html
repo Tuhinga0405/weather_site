@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- ... ваш существующий код формы и статистики ... -->
+    
+    <!-- Графики -->
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="tempChart" height="200"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="humidityChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ ПРАВИЛЬНАЯ передача данных через json_script -->
+<!-- В секции графиков -->
+
+{{ statistics.chart_data|json_script:"chart-data" }}
+{{ devices|json_script:"devices-list" }}
+
+<script>
+$(document).ready(function() {
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+    const devicesList = JSON.parse(document.getElementById('devices-list').textContent);
+    
+    const colors = [
+        {border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.5)'},
+        {border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.5)'},
+        {border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.5)'},
+        {border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.5)'}
+    ];
+    
+    if (!chartData || !chartData.labels || chartData.labels.length === 0) {
+        console.warn('⚠️ Нет данных для графиков');
+        return;
+    }
+    
+    // График температуры
+    const tempDatasets = Object.entries(chartData.datasets).map(([device, data], idx) => ({
+        label: device,  // device — это nickname из БД
+        data: data.temp || [],
+        borderColor: colors[idx % colors.length].border,
+        backgroundColor: colors[idx % colors.length].bg,
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+    }));
+    
+    new Chart(document.getElementById('tempChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: tempDatasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'Средняя температура по дням' },
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { title: { display: true, text: '°C' }, beginAtZero: false }
+            }
+        }
+    });
+    
+    // График влажности (аналогично)
+    const humidDatasets = Object.entries(chartData.datasets).map(([device, data], idx) => ({
+        label: device,
+        data: data.humidity || [],
+        borderColor: colors[idx % colors.length].border,
+        backgroundColor: colors[idx % colors.length].bg,
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+    }));
+    
+    new Chart(document.getElementById('humidityChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: humidDatasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'Средняя влажность по дням' },
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { title: { display: true, text: '%' }, beginAtZero: true }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

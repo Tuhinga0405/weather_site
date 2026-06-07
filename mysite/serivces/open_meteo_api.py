@@ -3,57 +3,46 @@ import pandas as pd
 import numpy as np
 import requests_cache
 from retry_requests import retry
-from datetime import datetime, timedelta
-from devices.models import Data, Device
+from datetime import datetime, timedelta, timezone
+from django.core.cache import cache
+from devices.models import Data
+
+# === Глобальная настройка клиента ===
+cache_session = requests_cache.CachedSession(".cache", expire_after=300)
+retry_session = retry(cache_session, retries=3, backoff_factor=0.1)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
 
-def deg_to_sector(deg: float) -> str:
-    ''' Вначале использовались данные с погоды mail.ru (в виде с, ю и т.д), 
-        и посторение графиков для розы ветров заточено под такую систему
-    '''
-    deg = deg % 360
-    sectors = {
-        0: "С", 22.5: "С-СВ", 45: "СВ", 67.5: "В-СВ",
-        90: "В", 112.5: "В-ЮВ", 135: "ЮВ", 157.5: "Ю-ЮВ",
-        180: "Ю", 202.5: "Ю-ЮЗ", 225: "ЮЗ", 247.5: "З-ЮЗ",
-        270: "З", 292.5: "З-СЗ", 315: "СЗ", 337.5: "С-СЗ"
-    }
-    keys = np.array(list(sectors.keys()))
-    nearest = keys[np.argmin(np.abs(keys - deg))]
-    return sectors[nearest]
-
-# данные с api приходят не в мм. ртутного столба
-def convert_pressure_to_mmhg(pressure_hpa: pd.Series) -> pd.Series:
-    return (pressure_hpa.astype("float64") * 0.75006).round(2)
-
-
-def fetch_weather(latitude: float, longitude: float,
-                  start_date: str, end_date: str,
-                  device_id: int) -> pd.DataFrame:
-
+def fetch_hourly_data(latitude: float, longitude: float, 
+                      hours: int = 24) -> pd.DataFrame:
+    """
+    Загружает почасовые данные за последние <hours> часов.
+    ТОЛЬКО температура и влажность.
+    """
+    end_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    start_date = (datetime.now(timezone.utc) - timedelta(hours=hours)).strftime("%Y-%m-%d")
+    
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": latitude,
         "longitude": longitude,
+        # ✅ ТОЛЬКО нужные поля
         "hourly": [
-            "temperature_2m", "relative_humidity_2m",
-            "wind_speed_10m", "wind_direction_10m",
-            "uv_index", "surface_pressure"
+            "temperature_2m", 
+            "relative_humidity_2m"
         ],
         "wind_speed_unit": "ms",
         "start_date": start_date,
         "end_date": end_date,
+        "timezone": "auto"
     }
 
     responses = openmeteo.weather_api(url, params=params)
     response = responses[0]
-
-    print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
-    print(f"Elevation: {response.Elevation()} m asl")
-    print(f"Timezone offset: {response.UtcOffsetSeconds()}s")
-
     hourly = response.Hourly()
-    hourly_data = {
+    
+    # ✅ Создаём DataFrame только с двумя колонками
+    df = pd.DataFrame({
         "date": pd.date_range(
             start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
             end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
@@ -62,143 +51,108 @@ def fetch_weather(latitude: float, longitude: float,
         ),
         "temp": hourly.Variables(0).ValuesAsNumpy(),
         "humidity": hourly.Variables(1).ValuesAsNumpy(),
-        "wind_speed": hourly.Variables(2).ValuesAsNumpy(),
-        "wind_direction": hourly.Variables(3).ValuesAsNumpy(),
-        "uv": hourly.Variables(4).ValuesAsNumpy(),
-        "pressure": hourly.Variables(5).ValuesAsNumpy(),
-        "device_id": device_id
-    }
-
-    df = pd.DataFrame(hourly_data)
-
-    # фильтрация по часам
-    target_hours = [0, 8, 14, 19]
-    df = df[df["date"].dt.hour.isin(target_hours)].copy()
-
-    # преобразования
-    df["pressure"] = convert_pressure_to_mmhg(df["pressure"])
-    df["wind_direction"] = df["wind_direction"].apply(deg_to_sector)
-
+    })
+    
+    df = df.copy()
+    
+    # ✅ Округление только для оставшихся числовых полей
+    for col in ['temp', 'humidity']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').round(2)
+    
     return df
 
 
-def get_date_range_for_device(device_id: int) -> tuple[str, str]:
-
-    today = datetime.now().date()
-    last_date = get_last_date(device_id)
-
-    # if is_table_empty():
-        # Правильное вычисление даты 4 недели назад
-        # start_date = (datetime.now() - timedelta(weeks=4)).strftime("%Y-%m-%d")
-        # end_date = today.strftime("%Y-%m-%d")
-        # return start_date, end_date
-
-    # if last_date is None:
-    #     start_date = (datetime.now() - timedelta(weeks=4)).strftime("%Y-%m-%d")
-    #     end_date = today.strftime("%Y-%m-%d")
-    #     return start_date, end_date
-
-    if last_date.date() < today:
-        start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
-        end_date = today.strftime("%Y-%m-%d")
-        return start_date, end_date
-
-    return None, None
-
-def update_weather_data():
-    """Основная функция обновления погодных данных."""
-    locations = [
-        {"latitude": 53.9, "longitude": 27.5667, "device_id": 1}, # минск
-        {"latitude": 52.0975, "longitude": 23.6878, "device_id": 2} # брест
-    ]
-
-    for location in locations:
-        date_range = get_date_range_for_device(location["device_id"])
-
-        if date_range[0] is None:
-            print(f"Данные для device_id {location['device_id']} уже актуальны.")
-            continue
-
-        start_date, end_date = date_range
-        print(f"Загрузка данных для device_id {location['device_id']}: {start_date} - {end_date}")
-
-        df = fetch_weather(
-            latitude=location["latitude"],
-            longitude=location["longitude"],
-            start_date=start_date,
-            end_date=end_date,
-            device_id=location["device_id"]
+def save_device_data(df: pd.DataFrame, device_id: int) -> int:
+    """
+    Сохраняет данные для устройства в БД (только temp и humidity).
+    """
+    df = df.copy()
+    df["device_id"] = device_id
+    
+    # Удаляем строки с отсутствующими критическими данными
+    df = df.dropna(subset=['date', 'temp'])
+    
+    # Проверка на дубликаты
+    existing_dates = set(
+        Data.objects.filter(
+            device_id=device_id,
+            date__in=df['date']
+        ).values_list('date', flat=True)
+    )
+    df = df[~df['date'].isin(existing_dates)]
+    
+    if df.empty:
+        return 0
+    
+    # ✅ Подготовка объектов ТОЛЬКО с нужными полями
+    records = [
+        Data(
+            date=row['date'].to_pydatetime(),
+            temp=row['temp'],
+            humidity=row['humidity'],
+            device_id=device_id
+            # ❌ wind_speed, wind_direction, uv, pressure — исключены
         )
-
-        # ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА ТИПОВ ДАННЫХ
-        print("Типы данных до преобразования:")
-        print(df.dtypes)
-
-        # ПРАВИЛЬНОЕ ОКРУГЛЕНИЕ С ПРОВЕРКОЙ
-        cols_to_round = ['temp', 'wind_speed', 'uv']
-        for col in cols_to_round:
-            # Убедимся, что данные числовые
-            if df[col].dtype in ['float64', 'int64', 'float32']:
-                df[col] = df[col].round(2)
-            else:
-                # Принудительное преобразование, если тип не числовой
-                df[col] = pd.to_numeric(df[col], errors='coerce').round(2)
-
-        # ПРОВЕРКА ПОСЛЕ ПРЕОБРАЗОВАНИЯ
-        print("\nПримеры данных после округления:")
-        print(df[cols_to_round].head())
-
-        if not df.empty:
-            weather_records = []
-            for _, row in df.iterrows():
-                record = Data(
-                    date=row['date'],
-                    temp=row['temp'],
-                    humidity=row['humidity'],
-                    wind_speed=row['wind_speed'],
-                    wind_direction=row['wind_direction'],
-                    uv=row['uv'],
-                    pressure=row['pressure'],
-                    device_id=row['device_id']
-                )
-                weather_records.append(record)
-
-            print(weather_records)
-            Data.objects.bulk_create(weather_records)
-            print(f"Сохранено {len(df)} записей для device_id {location['device_id']}")
+        for _, row in df.iterrows()
+    ]
+    
+    Data.objects.bulk_create(records, ignore_conflicts=True)
+    return len(records)
 
 
-# --- Заглушки для Django-моделей ---
-def get_last_date(device_id: int) -> datetime:
-
+def update_device_if_needed(device_id: int, latitude: float, longitude: float, 
+                           interval_minutes: int = 5) -> dict:
+    """
+    Проверяет интервал и обновляет данные если нужно.
+    """
+    cache_key = f"weather_last_update_{device_id}"
+    last_update = cache.get(cache_key)
+    now = datetime.now(timezone.utc)
+    
+    if last_update and (now - last_update).total_seconds() < interval_minutes * 60:
+        return {
+            "updated": False,
+            "reason": f"last update {int((now - last_update).total_seconds() / 60)} min ago"
+        }
+    
     try:
-        latest_record = Data.objects.filter(device_id=device_id).order_by('-date').first()
-        return latest_record.date if latest_record else None
-    except AttributeError:
-        return None
+        df = fetch_hourly_data(latitude, longitude, hours=24)
+        df = df[df["date"] > (now - timedelta(hours=24))]
+        
+        saved_count = save_device_data(df, device_id)
+        cache.set(cache_key, now, timeout=3600)
+        
+        return {
+            "updated": True,
+            "records_saved": saved_count,
+            "total_records": len(df)
+        }
+        
+    except Exception as e:
+        return {
+            "updated": False,
+            "error": str(e)
+        }
 
-def is_table_empty() -> bool:
+
+def update_all_devices(interval_minutes: int = 5) -> dict:
     """
-    Заглушка: проверить, пуста ли таблица.
-    Реализуйте через Django ORM: WeatherData.objects.count() == 0
+    Обновляет данные для всех устройств.
     """
-    return Data.objects.count() == 0
-
-
-#def save_weather_data(df: pd.DataFrame):
-    """
-    Заглушка: сохранить DataFrame в базу.
-    Реализуйте через Django ORM bulk_create или bulk_update
-    """
-#    return bulk_update
-
-
-# --- Настройка клиента Open-Meteo ---
-cache_session = requests_cache.CachedSession(".cache", expire_after=3600)
-retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
-openmeteo = openmeteo_requests.Client(session=retry_session)
-
-
-# --- Запуск обновления ---
-if __name__ == "__main__":
-    update_weather_data()
+    locations = [
+        {"latitude": 53.9, "longitude": 27.5667, "device_id": 1, "name": "Минск"},
+        {"latitude": 52.0975, "longitude": 23.6878, "device_id": 2, "name": "Брест"}
+    ]
+    
+    results = {}
+    for loc in locations:
+        results[loc["device_id"]] = update_device_if_needed(
+            device_id=loc["device_id"],
+            latitude=loc["latitude"],
+            longitude=loc["longitude"],
+            interval_minutes=interval_minutes
+        )
+        results[loc["device_id"]]["location"] = loc["name"]
+    
+    return results

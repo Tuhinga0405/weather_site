@@ -36,11 +36,7 @@
             <th scope="col">Псевдоним</th>
             <th scope="col">Дата</th>
             <th scope="col">Температура</th>
-            <th scope="col">Давление</th>
             <th scope="col">Влажность</th>
-            <th scope="col">Скорость ветра</th>
-            <th scope="col">Направление ветра</th>
-            <th scope="col">УФ</th>
           </tr>
         </thead>
         <tbody>
@@ -51,23 +47,7 @@
               <td>{{ row.device.nickname }} </td>
               <td>{{ row.date|date:"Y-m-d H:i:s" }}</td>
               <td>{{ row.temp }}</td>
-              <td>{{ row.pressure }}</td>
               <td>{{ row.humidity }}</td>
-              <td>
-                {% if row.wind_speed is not None %}
-                  {{ row.wind_speed }}
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if row.wind_direction %}
-                  {{ row.wind_direction }}
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td>{{ row.uv }}</td>
             </tr>
           {% empty %}
             <tr>

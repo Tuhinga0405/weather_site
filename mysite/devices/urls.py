@@ -25,7 +25,10 @@ urlpatterns = [
          views.DeviceDeleteView.as_view(),
          name='delete_device'),
     path('plots_data/<int:user_id>', views.PlotsData.as_view()),
-    path('dashboard/', views.dashboard, name='dashboard')
+    path('dashboard/', views.dashboard, name='dashboard'),
+    # ... ваши существующие URL ...
+    path('reports/', views.reports, name='reports'),
+    path('reports/pdf/', views.report_pdf, name='report_pdf'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

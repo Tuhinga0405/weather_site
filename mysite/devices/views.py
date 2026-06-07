@@ -12,6 +12,11 @@ from django.core.paginator import Paginator
 from .forms import DeviceForm, DeviceCreateForm, DeviceUpdateForm
 from rest_framework.response import Response
 from serivces.calculate_data import DataForPlots
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from serivces.report_generator import ReportGenerator
+from weasyprint import HTML
+import io
 import json
 
 
@@ -109,4 +114,50 @@ def devices(request):
     return render(request, 'devices/list_devices.html', {'devices': devices})
 
 
+@login_required
+def reports(request):
+    """Страница генерации отчётов."""
+    period = request.GET.get('period', 'week')  # По умолчанию — неделя
+    
+    if period not in ['day', 'week', 'month', 'year']:
+        period = 'week'
+    
+    generator = ReportGenerator(request.user.id)
+    context = generator.get_report_context(period)
+    
+    return render(request, 'devices/reports.html', context)
 
+
+@login_required
+def report_pdf(request):
+    """Генерация PDF-отчёта."""
+    period = request.GET.get('period', 'week')
+    
+    if period not in ['day', 'week', 'month', 'year']:
+        period = 'week'
+    
+    generator = ReportGenerator(request.user.id)
+    context = generator.get_report_context(period)
+    
+    # Рендер шаблона
+    html_string = render_to_string('devices/report_pdf.html', context)
+    
+    # Генерация PDF с настройками для кириллицы
+    pdf_file = io.BytesIO()
+    HTML(
+        string=html_string,
+        base_url=request.build_absolute_uri('/')  # Для корректных относительных путей
+    ).write_pdf(
+        pdf_file,
+        stylesheets=[
+            # Опционально: внешний CSS для PDF
+            # CSS(string='@page { size: A4; margin: 2cm; }')
+        ]
+    )
+    pdf_file.seek(0)
+    
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    filename = f"weather_report_{period}_{context['end_date'].replace('.', '-')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
